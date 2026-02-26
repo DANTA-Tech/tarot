@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>蛋挞塔罗 · 占卜</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #0d0a0f;
+      --bg-card: #151119;
+      --bg-card-hover: #1c1722;
+      --gold: #c9a227;
+      --gold-dim: #8b7355;
+      --gold-glow: rgba(201, 162, 39, 0.35);
+      --purple: #4a3f5c;
+      --purple-light: #6b5b7a;
+      --text: #e8e0e8;
+      --text-muted: #9a8f9a;
+      --moon: #e8e4d8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Serif SC', serif;
+      background: var(--bg-deep);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 星空背景 */
+    .stars {
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(74, 63, 92, 0.4), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(201, 162, 39, 0.08), transparent),
+        var(--bg-deep);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .stars::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(1.5px 1.5px at 20px 30px, rgba(255,255,255,0.4), transparent),
+        radial-gradient(1.5px 1.5px at 40px 70px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.35), transparent),
+        radial-gradient(1.5px 1.5px at 130px 80px, rgba(255,255,255,0.25), transparent);
+      background-size: 200px 120px;
+      animation: twinkle 4s ease-in-out infinite;
+      opacity: 0.8;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.4em;
+      margin-bottom: 0.25rem;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      letter-spacing: 0.2em;
+    }
+
+    .question-area {
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    .question-area label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .question-area input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--purple);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .question-area input::placeholder {
+      color: var(--text-muted);
+    }
+    .question-area input:focus {
+      outline: none;
+      border-color: var(--gold-dim);
+      box-shadow: 0 0 0 2px var(--gold-glow);
+    }
+
+    .spread-select {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      width: 100%;
+    }
+    .spread-btn {
+      padding: 0.6rem 1.2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--purple);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.2s, border-color 0.2s, color 0.2s;
+      position: relative;
+      z-index: 1;
+    }
+    .spread-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--gold-dim);
+      color: var(--gold);
+      transform: translateY(-8px);
+      z-index: 10;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .spread-btn.active {
+      background: rgba(201, 162, 39, 0.15);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .cut-btn-wrap {
+      display: none;
+      margin-bottom: 2rem;
+      margin-top: -5px;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .cut-btn-wrap.visible {
+      display: flex;
+    }
+    .draw-btn {
+      font-family: 'Cinzel', serif;
+      padding: 0.9rem 2.5rem;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      border: none;
+      border-radius: 6px;
+      color: var(--bg-deep);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .draw-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px var(--gold-glow);
+    }
+    .draw-btn:disabled {
+      background: var(--purple);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    .draw-btn:disabled:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* 切牌动画全屏层 */
+    .cut-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(20, 15, 28, 0.97) 0%, rgba(8, 6, 12, 0.99) 100%);
+      overflow: hidden;
+    }
+    .cut-overlay.visible {
+      display: flex;
+      animation: overlayFadeIn 0.4s ease-out;
+    }
+    @keyframes overlayFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .cut-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, transparent 30%, rgba(0,0,0,0.4) 100%);
+      pointer-events: none;
+    }
+    .magic-circle {
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      animation: rotateCircle 8s linear infinite;
+      box-shadow: 0 0 40px rgba(201, 162, 39, 0.15), inset 0 0 60px rgba(201, 162, 39, 0.05);
+    }
+    .magic-circle::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid var(--gold);
+      opacity: 0.7;
+      box-shadow: 0 0 20px var(--gold-glow);
+      animation: rotateCircleReverse 12s linear infinite;
+    }
+    .magic-circle::after {
+      content: '';
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      border: 1px solid rgba(201, 162, 39, 0.4);
+      opacity: 0.6;
+      animation: rotateCircle 15s linear infinite;
+    }
+    .magic-circle .inner {
+      position: absolute;
+      inset: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--gold-dim);
+      opacity: 0.6;
+      animation: rotateCircleReverse 10s linear infinite;
+      box-shadow: inset 0 0 30px rgba(201, 162, 39, 0.08);
+    }
+    .magic-circle .inner::before {
+      content: '✦';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      color: var(--gold);
+      opacity: 0.4;
+      text-shadow: 0 0 20px var(--gold-glow);
+    }
+    @keyframes rotateCircle {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes rotateCircleReverse {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+    .cut-cards-wrap {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 380px;
+      height: 380px;
+      margin-left: -190px;
+      margin-top: -190px;
+      transform-origin: 50% 50%;
+      pointer-events: none;
+    }
+    .cut-overlay.visible .cut-cards-wrap {
+      animation: cutCircleRotate 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes cutCircleRotate {
+      from { transform: rotate(0deg) scale(0.95); }
+      15% { transform: rotate(54deg) scale(1); }
+      to { transform: rotate(360deg) scale(1); }
+    }
+    .cut-card-item {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 44px;
+      height: 68px;
+      background: linear-gradient(160deg, var(--purple) 0%, var(--bg-card) 45%, rgba(30, 25, 40, 0.98) 100%);
+      border: 1px solid rgba(201, 162, 39, 0.5);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.5), 0 0 16px rgba(201, 162, 39, 0.12);
+      transform: translate(calc(var(--x) * 1px), calc(var(--y) * 1px)) translate(-50%, -50%);
+      animation: cutCardAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation-delay: calc(var(--i) * 0.012s);
+      opacity: 0;
+    }
+    .cut-card-item::before {
+      content: '✦';
+      font-size: 1.15rem;
+      color: var(--gold);
+      opacity: 0.85;
+      text-shadow: 0 0 10px var(--gold-glow);
+    }
+    @keyframes cutCardAppear {
+      from {
+        opacity: 0;
+        transform: translate(calc(var(--x) * 1px), calc(var(--y) * 1px)) translate(-50%, -50%) scale(0.2);
+      }
+      to {
+        opacity: 1;
+        transform: translate(calc(var(--x) * 1px), calc(var(--y) * 1px)) translate(-50%, -50%) scale(1);
+      }
+    }
+
+    /* 直线牌堆区域：横向滚动 */
+    .arc-section {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      margin-top: -140px;
+      width: 100%;
+    }
+    .arc-section.visible {
+      display: flex;
+      animation: fadeIn 0.5s ease;
+    }
+    .arc-prompt {
+      font-size: 0.9rem;
+      color: var(--gold-dim);
+      margin-bottom: 1rem;
+      margin-top: 90px;
+    }
+    .arc-prompt .count {
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .arc-deck {
+      width: 100%;
+      max-width: 900px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 24px 16px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .arc-deck::-webkit-scrollbar {
+      display: none;
+    }
+    .arc-scrollbar-wrap {
+      width: 100%;
+      max-width: 900px;
+      padding: 0 16px 8px;
+      display: flex;
+      justify-content: center;
+    }
+    .arc-scrollbar-track {
+      position: relative;
+      width: 100%;
+      height: 14px;
+      background: rgba(21, 17, 25, 0.5);
+      border-radius: 7px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(201, 162, 39, 0.12);
+    }
+    .arc-scrollbar-thumb {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 10px;
+      min-width: 40px;
+      background: linear-gradient(180deg, rgba(212, 175, 55, 0.5) 0%, rgba(201, 162, 39, 0.45) 50%, rgba(166, 139, 30, 0.4) 100%);
+      border-radius: 5px;
+      border: 1px solid rgba(201, 162, 39, 0.35);
+      cursor: grab;
+      pointer-events: auto;
+      transition: left 0.05s ease-out;
+      box-shadow: 0 0 12px rgba(201, 162, 39, 0.35), 0 0 20px rgba(201, 162, 39, 0.15);
+    }
+    .arc-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(224, 188, 64, 0.55) 0%, rgba(212, 175, 55, 0.5) 50%, rgba(201, 162, 39, 0.45) 100%);
+      box-shadow: 0 0 14px rgba(201, 162, 39, 0.4), 0 0 24px rgba(201, 162, 39, 0.2);
+    }
+    .arc-scrollbar-thumb:active {
+      cursor: grabbing;
+    }
+    .arc-deck-inner {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      gap: 0;
+      min-width: min-content;
+      height: 280px;
+    }
+    .arc-card {
+      flex-shrink: 0;
+      width: 104px;
+      height: 160px;
+      margin-left: calc(-1 * 104px * 2 / 3);
+      cursor: pointer;
+      transition: transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.25s ease, z-index 0.2s;
+      border-radius: 10px;
+      overflow: visible;
+      background: linear-gradient(145deg, var(--purple) 0%, var(--bg-card) 50%);
+      border: 1px solid var(--gold-dim);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+      position: relative;
+      transform: translateY(var(--curve, 0));
+    }
+    .arc-card:first-of-type {
+      margin-left: 0;
+    }
+    .arc-card .arc-card-num {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-size: 0.95rem;
+      color: var(--gold-dim);
+      font-variant-numeric: tabular-nums;
+    }
+    .arc-card .arc-card-symbol {
+      font-size: 2.4rem;
+      color: var(--gold);
+      opacity: 0.6;
+      margin-top: 8px;
+    }
+    .arc-card:hover {
+      transform: translateY(calc(var(--curve, 0) - 80px));
+      z-index: 100;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    }
+    .arc-card.flying {
+      pointer-events: none;
+      z-index: 200;
+    }
+
+    /* 飞到牌位的牌：先不翻面 */
+    .card-wrapper.in-slot {
+      cursor: pointer;
+    }
+    .card-wrapper.in-slot .card-inner {
+      transform: none;
+    }
+    .card-wrapper.in-slot.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-wrapper.in-slot.reversed .card-face.card-front {
+      transform: rotateY(180deg) rotate(180deg);
+    }
+    .card-fly-clone {
+      position: fixed;
+      width: 120px;
+      height: 200px;
+      z-index: 150;
+      pointer-events: none;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .cards-container {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      min-height: 280px;
+    }
+    .cards-container.love-star {
+      display: block;
+      min-height: 0;
+    }
+    .love-star-layout {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      padding-bottom: 40px;
+    }
+    .love-star-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .love-star-row.row-3 {
+      gap: calc(1.5rem + 150px);
+    }
+    .love-star-row.row-2 {
+      gap: calc(1.5rem + 50px);
+    }
+    .love-star-row.row-1 {
+      gap: 0;
+    }
+    .container.spread-love-star .arc-section {
+      margin-top: -90px;
+    }
+
+    .card-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 0 0 auto;
+      margin-top: 15px;
+    }
+    .card-slot .slot-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.9rem;
+      color: var(--gold-dim);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .love-star-layout .slot-label {
+      white-space: nowrap;
+      font-size: 0.7rem;
+    }
+    .card-slot-inner {
+      position: relative;
+      min-width: 120px;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      margin-top: -20px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.25), 0 0 24px rgba(255, 255, 255, 0.12);
+    }
+
+    .card-wrapper {
+      width: 120px;
+      height: 200px;
+      perspective: 800px;
+      cursor: pointer;
+    }
+    .card-wrapper.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .card-back {
+      background: linear-gradient(145deg, var(--purple) 0%, var(--bg-card) 50%);
+      border: 1px solid var(--gold-dim);
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.4);
+    }
+    .card-back::before {
+      content: '✦';
+      font-size: 2.5rem;
+      color: var(--gold);
+      opacity: 0.6;
+      text-shadow: 0 0 20px var(--gold-glow);
+    }
+    .card-front {
+      background: linear-gradient(160deg, var(--bg-card) 0%, var(--purple) 100%);
+      border: 1px solid var(--gold-dim);
+      transform: rotateY(180deg);
+      flex-direction: column;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .card-front .card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      color: var(--gold);
+      line-height: 1.2;
+      margin-bottom: 0.25rem;
+      word-break: break-word;
+    }
+    .card-front .card-orient {
+      font-size: 0.6rem;
+      color: var(--gold-dim);
+      margin: 0.15rem 0;
+    }
+    .card-front .card-number {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .result-area {
+      width: 100%;
+      margin-top: calc(2rem - 20px);
+      padding: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--purple);
+      border-radius: 10px;
+      display: none;
+    }
+    .result-area.visible {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .result-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--purple);
+    }
+    .result-content {
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: var(--text);
+    }
+    .result-content p {
+      margin-bottom: 0.75rem;
+    }
+    .result-content p:last-child {
+      margin-bottom: 0;
+    }
+    .result-content strong {
+      color: var(--gold-dim);
+    }
+
+    .reset-hint {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="container">
+    <header>
+      <h1 class="logo">DANTA TAROT</h1>
+      <p class="subtitle">蛋挞塔罗·静心抽牌</p>
+    </header>
+
+    <div class="question-area">
+      <label for="question">心中默念你的问题（可选）</label>
+      <input type="text" id="question" placeholder="例如：近期工作运势如何？感情会有转机吗？" maxlength="80">
+    </div>
+
+    <div class="spread-select">
+      <button type="button" class="spread-btn" data-spread="1">单张指引</button>
+      <button type="button" class="spread-btn" data-spread="3">过去 · 现在 · 未来</button>
+      <button type="button" class="spread-btn" data-spread="5">爱之星</button>
+    </div>
+
+    <div class="cut-btn-wrap" id="cutBtnWrap">
+      <button type="button" class="draw-btn" id="cutBtn">切 牌</button>
+      <button type="button" class="draw-btn" id="readBtn" disabled>解 读</button>
+    </div>
+
+    <!-- 切牌动画层：魔法阵 + 78张牌 -->
+    <div class="cut-overlay" id="cutOverlay">
+      <div class="magic-circle" id="magicCircle"><div class="inner"></div></div>
+      <div class="cut-cards-wrap" id="cutCardsWrap"></div>
+    </div>
+
+    <!-- 牌位在直线牌堆上方 -->
+    <div class="cards-container" id="cardsContainer"></div>
+
+    <!-- 切牌结束后：78张牌直线展开 -->
+    <div class="arc-section" id="arcSection">
+      <div class="arc-deck" id="arcDeck"></div>
+      <div class="arc-scrollbar-wrap" id="arcScrollbarWrap">
+        <div class="arc-scrollbar-track" id="arcScrollbarTrack">
+          <div class="arc-scrollbar-thumb" id="arcScrollbarThumb"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-area" id="resultArea">
+      <div class="result-title" id="resultTitle">牌意解读</div>
+      <div class="result-content" id="resultContent"></div>
+      <p class="reset-hint">再次选择牌阵并点击「切牌」可重新占卜</p>
+    </div>
+  </div>
+
+  <script>
+    const MAJOR_ARCANA = [
+      { id: 0, name: '愚者', nameEn: 'The Fool', meaning: '新的开始、天真、冒险、自由与无限可能。保持开放与信任，勇敢迈出一步。', meaningReversed: '逆位：鲁莽、逃避或方向不明。放慢脚步，避免冲动决定，先想清楚再行动。' },
+      { id: 1, name: '魔术师', nameEn: 'The Magician', meaning: '显化与行动力。你已具备所需资源与能力，专注意图并付诸实践即可成真。', meaningReversed: '逆位：能力未用或误用、欺骗。检视是否在逃避行动或操纵他人，回归真诚与专注。' },
+      { id: 2, name: '女祭司', nameEn: 'The High Priestess', meaning: '直觉、内在智慧与神秘。倾听内心与梦境，答案藏在静默与潜意识中。', meaningReversed: '逆位：直觉被压抑、表里不一。倾听被忽略的内在声音，减少外在喧嚣，回归内在。' },
+      { id: 3, name: '皇后', nameEn: 'The Empress', meaning: '丰饶、滋养与创造力。接纳丰盛与美，关怀自身与周遭，让生命自然绽放。', meaningReversed: '逆位：创造受阻、依赖或过度付出。平衡给予与接受，先滋养自己再照顾他人。' },
+      { id: 4, name: '皇帝', nameEn: 'The Emperor', meaning: '秩序、权威与稳定。建立结构与边界，用理性与责任巩固你的领域。', meaningReversed: '逆位：僵化、专制或失控。在规则与弹性之间找平衡，权威用在建设而非压制。' },
+      { id: 5, name: '教皇', nameEn: 'The Hierophant', meaning: '传统、智慧与传承。可寻求导师或既有体系的支持，或成为他人的指引。', meaningReversed: '逆位：打破教条、另辟蹊径。可尊重传统但不必盲从，寻找属于自己的信念。' },
+      { id: 6, name: '恋人', nameEn: 'The Lovers', meaning: '选择、联结与价值观的契合。在重要决定中倾听内心，与真正对齐的人事物结合。', meaningReversed: '逆位：失衡、错误选择或分离。厘清真正想要的关系与价值，避免为合群而违背本心。' },
+      { id: 7, name: '战车', nameEn: 'The Chariot', meaning: '意志力与胜利。以决心驾驭对立力量，克服障碍，朝目标前进。', meaningReversed: '逆位：方向混乱、强推或放弃。调整方法而非硬冲，有时退一步才能更好前进。' },
+      { id: 8, name: '力量', nameEn: 'Strength', meaning: '内在力量、温柔与勇气。以耐心与同理心驯服恐惧，真正的力量来自心。', meaningReversed: '逆位：怀疑自己、滥用力量或退缩。找回对自身的信任，用温和而非控制面对困境。' },
+      { id: 9, name: '隐者', nameEn: 'The Hermit', meaning: '内省、独处与寻找真理。暂时退后一步，在静默中获得洞见与方向。', meaningReversed: '逆位：过度封闭或逃避联结。独处有价值，但也要适时与他人交流，避免孤绝。' },
+      { id: 10, name: '命运之轮', nameEn: 'Wheel of Fortune', meaning: '转变与周期。命运在转动，接受变化，顺势而为，新的阶段即将到来。', meaningReversed: '逆位：逆风期、延迟或重复旧模式。接受当下节奏，在低谷中为下一转做准备。' },
+      { id: 11, name: '正义', nameEn: 'Justice', meaning: '公平、因果与真相。权衡利弊，为选择负责，因果会带来平衡。', meaningReversed: '逆位：不公、逃避责任或偏见。诚实面对因果，为过去选择负责才能迎来公正。' },
+      { id: 12, name: '倒吊人', nameEn: 'The Hanged Man', meaning: '换位思考、牺牲与顿悟。有时需要放手或换个角度，等待会带来新的理解。', meaningReversed: '逆位：拖延、无谓牺牲或不愿放手。区分值得的等待与逃避，该行动时也要动。' },
+      { id: 13, name: '死神', nameEn: 'Death', meaning: '结束与重生。旧事终结为新生腾出空间，放下执念，迎接转化。', meaningReversed: '逆位：抗拒改变、半吊子结束。接受告别的必要性，才能迎来真正的重生。' },
+      { id: 14, name: '节制', nameEn: 'Temperance', meaning: '平衡、调和与耐心。融合对立面，以温和与中庸之道前行。', meaningReversed: '逆位：失衡、急躁或放纵。重新找回节奏，在极端之间寻回中道。' },
+      { id: 15, name: '恶魔', nameEn: 'The Devil', meaning: '执念、诱惑与阴影。觉察束缚你的信念或习惯，你有能力解开锁链。', meaningReversed: '逆位：挣脱束缚、看见真相。意识到链锁可解，是走出执念与成瘾的契机。' },
+      { id: 16, name: '高塔', nameEn: 'The Tower', meaning: '骤变、觉醒与打破幻象。突如其来的冲击带来真相与解放，重建更稳固的根基。', meaningReversed: '逆位：避免不了的震荡、恐惧改变。该来的崩塌会来，主动调整比被动承受更有余地。' },
+      { id: 17, name: '星星', nameEn: 'The Star', meaning: '希望、疗愈与灵感。保持信念，在黑暗中仍有光，给予与接受希望。', meaningReversed: '逆位：希望动摇、失望或疏离。允许脆弱，但不要放弃对光的信任。' },
+      { id: 18, name: '月亮', nameEn: 'The Moon', meaning: '潜意识、直觉与幻象。面对内在恐惧与未知，区分真实与想象，信任直觉但保持觉察。', meaningReversed: '逆位：幻象渐散、面对恐惧。迷雾散去时，正是厘清真相与情绪的好时机。' },
+      { id: 19, name: '太阳', nameEn: 'The Sun', meaning: '喜悦、成功与活力。光明与温暖到来，享受当下，分享快乐。', meaningReversed: '逆位：暂时阴霾、过度乐观或疲惫。光明会回来，先休息与务实面对当下。' },
+      { id: 20, name: '审判', nameEn: 'Judgement', meaning: '觉醒、召唤与新生。听到内在召唤，告别过去身份，迎接真正的自己。', meaningReversed: '逆位：自我批判、逃避召唤或懊悔。原谅过去的自己，才能回应内心的召唤。' },
+      { id: 21, name: '世界', nameEn: 'The World', meaning: '完成、圆满与整合。一个周期圆满结束，你已具备进入下一阶段的能力与智慧。', meaningReversed: '逆位：差一步圆满、需整合内在。外在虽未完全收束，内在的整合已在发生。' }
+    ];
+
+    const MINOR_ARCANA = [
+      { suit: '圣杯', suitEn: 'Cups', cards: [
+        { name: '圣杯一', nameEn: 'Ace of Cups', meaning: '新的情感、直觉与爱的萌芽。敞开心扉，接纳灵感与联结。', meaningReversed: '逆位：情感受阻、心扉关闭。给自己时间，不必强求立刻敞开。' },
+        { name: '圣杯二', nameEn: 'Two of Cups', meaning: '合作、和谐与伙伴关系。平等联结，心意相通。', meaningReversed: '逆位：关系失衡、合作破裂。检视双方是否真的平等与尊重。' },
+        { name: '圣杯三', nameEn: 'Three of Cups', meaning: '庆祝、友谊与丰收。与志同道合者共享喜悦。', meaningReversed: '逆位：表面热闹、背后比较。区分真友谊与应酬，回归真实联结。' },
+        { name: '圣杯四', nameEn: 'Four of Cups', meaning: '内省、选择与不满足。审视内心真正渴望，再决定是否接纳新机会。', meaningReversed: '逆位：走出麻木、愿意尝试。被动等待转为主动接纳或追寻。' },
+        { name: '圣杯五', nameEn: 'Five of Cups', meaning: '失落与悲伤。允许哀悼，但别忘了身边仍有的支持与希望。', meaningReversed: '逆位：放下执念、看见仍有的美好。从失落中抬头，接纳疗愈。' },
+        { name: '圣杯六', nameEn: 'Six of Cups', meaning: '回忆、童年与馈赠。怀旧或重遇故人，温习美好。', meaningReversed: '逆位：沉溺过去或放下怀旧。可怀念但不必活在过去。' },
+        { name: '圣杯七', nameEn: 'Seven of Cups', meaning: '幻想、选择与梦境。在众多可能中看清什么是真正想要的。', meaningReversed: '逆位：从幻象中清醒、做决定。化幻想为可执行的选择。' },
+        { name: '圣杯八', nameEn: 'Eight of Cups', meaning: '离开、追寻与放下。为更高目标而转身，勇敢前行。', meaningReversed: '逆位：不敢离开或离开得不彻底。确认自己是否在逃避而非追寻。' },
+        { name: '圣杯九', nameEn: 'Nine of Cups', meaning: '满足、独享与愿望达成。感恩已有，心安即福。', meaningReversed: '逆位：空虚、炫耀或贪多。内在满足比外在堆砌更重要。' },
+        { name: '圣杯十', nameEn: 'Ten of Cups', meaning: '和谐、家庭与情感圆满。归属感与长久的幸福。', meaningReversed: '逆位：家庭或归属的阴影面。面对隐藏矛盾才能走向真正和谐。' },
+        { name: '圣杯侍从', nameEn: 'Page of Cups', meaning: '敏感、创意与直觉消息。留意梦境与突如其来的感受。', meaningReversed: '逆位：情绪化、逃避或灵感堵塞。先落地踏实再信任直觉。' },
+        { name: '圣杯骑士', nameEn: 'Knight of Cups', meaning: '浪漫、邀请与理想主义。带着诚意与美感接近目标或某人。', meaningReversed: '逆位：多情善变、逃避承诺。在浪漫与责任之间找平衡。' },
+        { name: '圣杯皇后', nameEn: 'Queen of Cups', meaning: '同理心、直觉与滋养。以情感智慧关怀自己与他人。', meaningReversed: '逆位：过度依赖情绪或边界模糊。先稳固自己的情绪再照顾他人。' },
+        { name: '圣杯国王', nameEn: 'King of Cups', meaning: '情感成熟、稳重与支持。在情绪波动中保持冷静与包容。', meaningReversed: '逆位：压抑情绪或情感操控。真实表达比维持表面平静更重要。' }
+      ]},
+      { suit: '星币', suitEn: 'Pentacles', cards: [
+        { name: '星币一', nameEn: 'Ace of Pentacles', meaning: '新机会、富足与务实开端。将想法落地，种下物质与健康的种子。', meaningReversed: '逆位：机会延迟、浪费或错失。检视是否因犹豫或散漫而错过落地机会。' },
+        { name: '星币二', nameEn: 'Two of Pentacles', meaning: '平衡、多任务与适应。在变动中保持灵活与节奏。', meaningReversed: '逆位：失衡、疲于应付。需要做取舍而非勉强兼顾一切。' },
+        { name: '星币三', nameEn: 'Three of Pentacles', meaning: '团队、技能与成长。合作与精进带来可见的进展。', meaningReversed: '逆位：独断、配合不佳或质量打折。重视协作与专业，避免单干或敷衍。' },
+        { name: '星币四', nameEn: 'Four of Pentacles', meaning: '稳定、保守与安全感。在守护与分享之间寻找平衡。', meaningReversed: '逆位：过度紧抓或开始放手。安全感可以来自分享与流动。' },
+        { name: '星币五', nameEn: 'Five of Pentacles', meaning: '困难与匮乏感。团结与求助能带你度过寒冬。', meaningReversed: '逆位：走出寒冬、接受帮助。最坏阶段过去，允许自己接受支援。' },
+        { name: '星币六', nameEn: 'Six of Pentacles', meaning: '分享、慷慨与公平。给予与接受都在维持一种平衡。', meaningReversed: '逆位：施受失衡、单方面付出。检视给予是否出于平等与尊重。' },
+        { name: '星币七', nameEn: 'Seven of Pentacles', meaning: '耐心、投资与等待。成果需要时间，持续耕耘。', meaningReversed: '逆位：急于收成或怀疑投入。调整期待，或确认方向是否仍值得。' },
+        { name: '星币八', nameEn: 'Eight of Pentacles', meaning: '勤劳、技艺与专注。精益求精，在细节中进步。', meaningReversed: '逆位：敷衍、半途而废或陷入细节。在专注与灵活之间找平衡。' },
+        { name: '星币九', nameEn: 'Nine of Pentacles', meaning: '成就、独立与享受。自给自足，享受劳动果实。', meaningReversed: '逆位：依赖他人或挥霍成果。享受的同时保持独立与节制。' },
+        { name: '星币十', nameEn: 'Ten of Pentacles', meaning: '传承、家族与长久富足。物质与传统的稳固根基。', meaningReversed: '逆位：家族矛盾、传承压力。财富与责任需与内心价值对齐。' },
+        { name: '星币侍从', nameEn: 'Page of Pentacles', meaning: '学习、好奇与潜力。新技能或新计划正在萌芽。', meaningReversed: '逆位：拖延、不踏实或目标涣散。从小处着手，建立可执行的计划。' },
+        { name: '星币骑士', nameEn: 'Knight of Pentacles', meaning: '可靠、稳步与尽职。用耐心与务实达成目标。', meaningReversed: '逆位：固执、过慢或害怕改变。稳健之余也要允许适度冒险。' },
+        { name: '星币皇后', nameEn: 'Queen of Pentacles', meaning: '丰饶、务实与滋养。照顾身体与环境，创造安稳的根基。', meaningReversed: '逆位：忽视身体、物质焦虑。先照顾好自己，再经营外在。' },
+        { name: '星币国王', nameEn: 'King of Pentacles', meaning: '成功、权威与财富。稳健经营，值得信赖。', meaningReversed: '逆位：贪婪、僵化或滥用资源。成功需与正直和分享并行。' }
+      ]},
+      { suit: '宝剑', suitEn: 'Swords', cards: [
+        { name: '宝剑一', nameEn: 'Ace of Swords', meaning: '突破、清晰与新想法。真相与理性带来决断力。', meaningReversed: '逆位：混乱、沟通受阻或误用理性。厘清意图再表达，避免伤人。' },
+        { name: '宝剑二', nameEn: 'Two of Swords', meaning: '两难、僵持与抉择。暂时无法看清时，先接纳这种不确定。', meaningReversed: '逆位：打破僵局、做出选择。拖延带来的代价可能更大，不妨先选一条路。' },
+        { name: '宝剑三', nameEn: 'Three of Swords', meaning: '伤心、失落与疗愈。承认痛苦是愈合的第一步。', meaningReversed: '逆位：疗愈进行中、放下执念。允许时间与眼泪，伤口正在闭合。' },
+        { name: '宝剑四', nameEn: 'Four of Swords', meaning: '休息、恢复与暂停。蓄力再战，不必急于行动。', meaningReversed: '逆位：被迫行动或休息不足。在动与静之间找到当下最需要的节奏。' },
+        { name: '宝剑五', nameEn: 'Five of Swords', meaning: '冲突、争执与胜败。短期赢未必带来和平，权衡代价。', meaningReversed: '逆位：放下输赢、寻求和解。真正的赢是关系与内心的和平。' },
+        { name: '宝剑六', nameEn: 'Six of Swords', meaning: '过渡、迁移与平静。离开旧境，驶向更安稳的水域。', meaningReversed: '逆位：过渡困难、无法放手。离开需要时间，允许自己慢慢挪动。' },
+        { name: '宝剑七', nameEn: 'Seven of Swords', meaning: '策略、逃避或独辟蹊径。审视动机，选择诚实的方式。', meaningReversed: '逆位：真相浮现、不再自欺。面对后果比继续逃避更轻松。' },
+        { name: '宝剑八', nameEn: 'Eight of Swords', meaning: '限制与自我设限。许多束缚来自想法，试着换个视角。', meaningReversed: '逆位：看见出路、挣脱心牢。限制多是自我设的，你比想象中自由。' },
+        { name: '宝剑九', nameEn: 'Nine of Swords', meaning: '焦虑、恐惧与噩梦。寻求倾诉与支持，黑暗会过去。', meaningReversed: '逆位：恐惧减轻、寻求帮助。最坏的想象多不会成真，可与人分担。' },
+        { name: '宝剑十', nameEn: 'Ten of Swords', meaning: '结束与低谷。黎明前最暗，放下后才有新生。', meaningReversed: '逆位：谷底已过、缓慢恢复。最糟阶段过去，接下来是重建。' },
+        { name: '宝剑侍从', nameEn: 'Page of Swords', meaning: '警觉、探索与新消息。保持好奇，小心求证。', meaningReversed: '逆位：八卦、轻信或沟通失当。核实信息再传播，避免制造误会。' },
+        { name: '宝剑骑士', nameEn: 'Knight of Swords', meaning: '冲动、行动与急躁。冲劲十足，但需注意后果与他人感受。', meaningReversed: '逆位：莽撞后果显现、学会刹车。行动前多考虑他人与长远。' },
+        { name: '宝剑皇后', nameEn: 'Queen of Swords', meaning: '独立、清晰与洞察。理性与界限带来尊重与清明。', meaningReversed: '逆位：冷漠、批判或界限过严。清晰可以同时带着温度。' },
+        { name: '宝剑国王', nameEn: 'King of Swords', meaning: '权威、理性与决断。公正与逻辑主导决策。', meaningReversed: '逆位：独断、不公或滥用权威。理性需与同理心结合。' }
+      ]},
+      { suit: '权杖', suitEn: 'Wands', cards: [
+        { name: '权杖一', nameEn: 'Ace of Wands', meaning: '新开始、灵感与能量。抓住热情，将创意付诸行动。', meaningReversed: '逆位：热情受阻、延迟或方向不明。先厘清真正想做的事再点火。' },
+        { name: '权杖二', nameEn: 'Two of Wands', meaning: '规划、展望与选择。在安全与冒险之间做决定。', meaningReversed: '逆位：不敢冒险或计划落空。调整计划而非放弃，小步试水也可。' },
+        { name: '权杖三', nameEn: 'Three of Wands', meaning: '远见、合作与扩张。视野开阔，等待远方消息。', meaningReversed: '逆位：结果延迟、视野受限。扩展视野或调整合作方式，耐心等待。' },
+        { name: '权杖四', nameEn: 'Four of Wands', meaning: '庆祝、稳定与根基。阶段性的成果与安稳。', meaningReversed: '逆位：根基动摇、暂别庆祝。先稳固基础再谈庆祝，或接受短暂动荡。' },
+        { name: '权杖五', nameEn: 'Five of Wands', meaning: '竞争、冲突与活力。分歧中仍有成长，找到共同目标。', meaningReversed: '逆位：冲突降温、找到共识。从对抗转向合作，能量用在建设。' },
+        { name: '权杖六', nameEn: 'Six of Wands', meaning: '胜利、认可与自信。努力被看见，继续前行。', meaningReversed: '逆位：未被认可、自信受挫。价值不取决于他人眼光，内在肯定很重要。' },
+        { name: '权杖七', nameEn: 'Seven of Wands', meaning: '坚持、防御与信念。守住立场，相信自己的选择。', meaningReversed: '逆位：怀疑立场或选择退让。区分值得守的与可以放下的。' },
+        { name: '权杖八', nameEn: 'Eight of Wands', meaning: '迅速、行动与消息。进展加快，保持灵活。', meaningReversed: '逆位：延迟、计划打乱。接受节奏变化，顺势调整而非硬推。' },
+        { name: '权杖九', nameEn: 'Nine of Wands', meaning: '警惕、坚持与边界。在经验中设限，但不放弃希望。', meaningReversed: '逆位：过度防卫或放下戒备。在保护自己与开放信任之间找平衡。' },
+        { name: '权杖十', nameEn: 'Ten of Wands', meaning: '责任与负担。适当放下或分担，不必一人扛全部。', meaningReversed: '逆位：卸下重担、委托他人。放手不是失败，是智慧分配。' },
+        { name: '权杖侍从', nameEn: 'Page of Wands', meaning: '探索、热情与新机会。勇敢尝试，保持好奇。', meaningReversed: '逆位：三分钟热度、缺乏计划。热情需要与坚持、计划结合。' },
+        { name: '权杖骑士', nameEn: 'Knight of Wands', meaning: '激情、冒险与变化。行动力强，留意冲动与耐心平衡。', meaningReversed: '逆位：鲁莽后果、冲动降温。放慢脚步，考虑他人与后果。' },
+        { name: '权杖皇后', nameEn: 'Queen of Wands', meaning: '自信、热情与独立。活出自我，敢于发光。', meaningReversed: '逆位：嫉妒、控制或失去自信。找回自己的光，不与他人比较。' },
+        { name: '权杖国王', nameEn: 'King of Wands', meaning: '领导、远见与魄力。有愿景也有执行力，带领他人前进。', meaningReversed: '逆位：独裁、霸道或失去方向。领导力需与倾听、尊重并行。' }
+      ]}
+    ];
+
+    function buildFullDeck() {
+      const deck = MAJOR_ARCANA.map(c => ({ ...c }));
+      MINOR_ARCANA.forEach(suit => {
+        suit.cards.forEach(c => deck.push({ ...c }));
+      });
+      return deck;
+    }
+    const FULL_DECK = buildFullDeck();
+
+    const SPREAD_LABELS = { 1: [''], 3: ['过去', '现在', '未来'], 5: ['你所具备的', '你不具备的', '你应该做什么', '你不应该做什么', '最终结局'] };
+
+    let currentSpread = 1;
+    let drawnCards = [];
+    let arcDeckData = [];
+    let cardsToDraw = 0;
+    let starScrollbarUpdateThumb = null;
+
+    const spreadBtns = document.querySelectorAll('.spread-btn');
+    const cutBtnWrap = document.getElementById('cutBtnWrap');
+    const cutBtn = document.getElementById('cutBtn');
+    const readBtn = document.getElementById('readBtn');
+    const cutOverlay = document.getElementById('cutOverlay');
+    const cutCardsWrap = document.getElementById('cutCardsWrap');
+    const arcSection = document.getElementById('arcSection');
+    const arcDeck = document.getElementById('arcDeck');
+    const arcScrollbarTrack = document.getElementById('arcScrollbarTrack');
+    const arcScrollbarThumb = document.getElementById('arcScrollbarThumb');
+    const cardsContainer = document.getElementById('cardsContainer');
+    const resultArea = document.getElementById('resultArea');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultContent = document.getElementById('resultContent');
+
+    const containerEl = document.querySelector('.container');
+    spreadBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        spreadBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSpread = parseInt(btn.dataset.spread, 10);
+        containerEl.classList.toggle('spread-love-star', currentSpread === 5);
+        cutBtnWrap.classList.add('visible');
+        resetReading();
+      });
+    });
+
+    cutBtn.addEventListener('click', startCutPhase);
+    readBtn.addEventListener('click', () => {
+      if (!readBtn.disabled && drawnCards.length > 0) {
+        cardsContainer.querySelectorAll('.card-wrapper.in-slot').forEach(w => w.classList.add('flipped'));
+        arcSection.classList.remove('visible');
+        renderResult();
+      }
+    });
+    arcDeck.addEventListener('wheel', onDeckWheel, { passive: false });
+    window.addEventListener('resize', () => {
+      if (arcSection.classList.contains('visible')) updateArcCurve();
+    });
+
+    function resetReading() {
+      drawnCards = [];
+      arcDeckData = [];
+      cardsToDraw = 0;
+      cardsContainer.innerHTML = '';
+      resultArea.classList.remove('visible');
+      arcSection.classList.remove('visible');
+      arcDeck.innerHTML = '';
+      readBtn.disabled = true;
+    }
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function startCutPhase() {
+      resetReading();
+      cardsToDraw = currentSpread === 1 ? 1 : currentSpread === 5 ? 5 : 3;
+      arcDeckData = shuffle(FULL_DECK);
+
+      cutOverlay.classList.add('visible');
+      cutCardsWrap.innerHTML = '';
+      const radius = 140;
+      for (let i = 0; i < 78; i++) {
+        const angle = (i / 78) * Math.PI * 2;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        const el = document.createElement('div');
+        el.className = 'cut-card-item';
+        el.style.setProperty('--x', x);
+        el.style.setProperty('--y', y);
+        el.style.setProperty('--i', i);
+        cutCardsWrap.appendChild(el);
+      }
+
+      setTimeout(() => {
+        cutOverlay.classList.remove('visible');
+        buildArcDeck();
+        createSlots();
+        arcSection.classList.add('visible');
+      }, 2000);
+    }
+
+    function buildArcDeck() {
+      arcDeck.innerHTML = '';
+      const inner = document.createElement('div');
+      inner.className = 'arc-deck-inner';
+      for (let i = 0; i < 78; i++) {
+        const card = document.createElement('div');
+        card.className = 'arc-card';
+        card.dataset.index = i;
+        card.style.zIndex = i;
+        card.innerHTML = `<span class="arc-card-num">${i + 1}</span><span class="arc-card-symbol">✦</span>`;
+        card.addEventListener('click', onArcCardClick);
+        inner.appendChild(card);
+      }
+      arcDeck.appendChild(inner);
+      requestAnimationFrame(() => {
+        setupStarScrollbar();
+        updateArcCurve();
+      });
+    }
+
+    function updateArcCurve() {
+      if (!arcSection.classList.contains('visible')) return;
+      const deckRect = arcDeck.getBoundingClientRect();
+      const visibleCenterX = deckRect.left + deckRect.width / 2;
+      const peakHeight = 42;
+      const falloffRadius = deckRect.width / 2;
+      arcDeck.querySelectorAll('.arc-card').forEach(card => {
+        const r = card.getBoundingClientRect();
+        const cardCenterX = r.left + r.width / 2;
+        const distance = Math.abs(cardCenterX - visibleCenterX);
+        const t = Math.min(1, distance / falloffRadius);
+        const curve = -peakHeight * (1 - t * t);
+        card.style.setProperty('--curve', curve + 'px');
+      });
+    }
+
+    function setupStarScrollbar() {
+      const track = arcScrollbarTrack;
+      const thumb = arcScrollbarThumb;
+      if (starScrollbarUpdateThumb) {
+        arcDeck.removeEventListener('scroll', starScrollbarUpdateThumb);
+        starScrollbarUpdateThumb = null;
+      }
+      const maxScroll = arcDeck.scrollWidth - arcDeck.clientWidth;
+      if (maxScroll <= 0) {
+        thumb.style.display = 'none';
+        return;
+      }
+      thumb.style.display = 'block';
+      const trackW = track.offsetWidth;
+      const thumbWidth = 40;
+      const thumbHeight = 10;
+      thumb.style.width = thumbWidth + 'px';
+      thumb.style.height = thumbHeight + 'px';
+      function updateThumb() {
+        const max = arcDeck.scrollWidth - arcDeck.clientWidth;
+        const left = max <= 0 ? 0 : (arcDeck.scrollLeft / max) * (track.offsetWidth - thumbWidth);
+        thumb.style.left = left + 'px';
+      }
+      starScrollbarUpdateThumb = updateThumb;
+      updateThumb();
+      let arcCurveRaf = 0;
+      arcDeck.addEventListener('scroll', () => {
+        updateThumb();
+        if (arcCurveRaf) cancelAnimationFrame(arcCurveRaf);
+        arcCurveRaf = requestAnimationFrame(() => {
+          updateArcCurve();
+          arcCurveRaf = 0;
+        });
+      });
+      track.addEventListener('click', (e) => {
+        if (e.target === thumb) return;
+        const x = e.clientX - track.getBoundingClientRect().left;
+        const p = Math.max(0, Math.min(1, (x - thumbWidth / 2) / (trackW - thumbWidth)));
+        arcDeck.scrollLeft = p * maxScroll;
+      });
+      let drag = false;
+      let startX, startScroll;
+      thumb.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        drag = true;
+        startX = e.clientX;
+        startScroll = arcDeck.scrollLeft;
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!drag) return;
+        const dx = e.clientX - startX;
+        arcDeck.scrollLeft = Math.max(0, Math.min(maxScroll, startScroll + dx * (maxScroll / (trackW - thumbWidth))));
+      });
+      document.addEventListener('mouseup', () => { drag = false; });
+    }
+
+    function onDeckWheel(e) {
+      if (!arcSection.classList.contains('visible')) return;
+      e.preventDefault();
+      arcDeck.scrollLeft += e.deltaY;
+    }
+
+    function createSlots() {
+      const labels = SPREAD_LABELS[currentSpread] || [];
+      if (currentSpread === 5) {
+        cardsContainer.classList.add('love-star');
+        const wrap = document.createElement('div');
+        wrap.className = 'love-star-layout';
+        const row1 = document.createElement('div');
+        row1.className = 'love-star-row row-1';
+        const row2 = document.createElement('div');
+        row2.className = 'love-star-row row-2';
+        const row3 = document.createElement('div');
+        row3.className = 'love-star-row row-3';
+        [4, 2, 3, 0, 1].forEach(i => {
+          const slot = document.createElement('div');
+          slot.className = 'card-slot';
+          slot.innerHTML = `
+            <div class="card-slot-inner" data-slot-index="${i}">
+              <span class="slot-label">${labels[i] || ''}</span>
+            </div>
+          `;
+          if (i === 4) row1.appendChild(slot);
+          else if (i === 2 || i === 3) row2.appendChild(slot);
+          else row3.appendChild(slot);
+        });
+        wrap.appendChild(row1);
+        wrap.appendChild(row2);
+        wrap.appendChild(row3);
+        cardsContainer.appendChild(wrap);
+      } else {
+        cardsContainer.classList.remove('love-star');
+        for (let i = 0; i < cardsToDraw; i++) {
+          const slot = document.createElement('div');
+          slot.className = 'card-slot';
+          slot.innerHTML = `
+            <div class="card-slot-inner" data-slot-index="${i}">
+              <span class="slot-label">${labels[i] || ''}</span>
+            </div>
+          `;
+          cardsContainer.appendChild(slot);
+        }
+      }
+    }
+
+    function onArcCardClick(e) {
+      if (drawnCards.length >= cardsToDraw) return;
+      const cardEl = e.currentTarget;
+      const index = parseInt(cardEl.dataset.index, 10);
+      const cardData = arcDeckData[index];
+      if (!cardData) return;
+      cardEl.classList.add('flying');
+      const slotIndex = drawnCards.length;
+      const slotInner = cardsContainer.querySelector('.card-slot-inner[data-slot-index="' + slotIndex + '"]');
+      const slot = slotInner ? slotInner.closest('.card-slot') : null;
+      if (!slot || !slotInner) return;
+      const fromRect = cardEl.getBoundingClientRect();
+      const toRect = slotInner.getBoundingClientRect();
+
+      const clone = document.createElement('div');
+      clone.className = 'card-fly-clone';
+      clone.innerHTML = `
+        <div class="card-face card-back" style="position:absolute;inset:0;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg, var(--purple), var(--bg-card));border:1px solid var(--gold-dim);">
+          <span style="font-size:2rem;color:var(--gold);opacity:0.6;">✦</span>
+        </div>
+      `;
+      clone.style.left = fromRect.left + 'px';
+      clone.style.top = fromRect.top + 'px';
+      clone.style.width = fromRect.width + 'px';
+      clone.style.height = fromRect.height + 'px';
+      document.body.appendChild(clone);
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          clone.style.transition = 'left 0.5s ease-out, top 0.5s ease-out, width 0.5s ease-out, height 0.5s ease-out';
+          clone.style.left = toRect.left + 'px';
+          clone.style.top = toRect.top + 'px';
+          clone.style.width = toRect.width + 'px';
+          clone.style.height = toRect.height + 'px';
+        });
+      });
+
+      clone.addEventListener('transitionend', () => {
+        clone.remove();
+        cardEl.style.visibility = 'hidden';
+        cardEl.style.pointerEvents = 'none';
+        const reversed = Math.random() < 0.5;
+        drawnCards.push({ ...cardData, reversed });
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'card-wrapper in-slot' + (reversed ? ' reversed' : '');
+        wrapper.dataset.slotIndex = slotIndex;
+        wrapper.innerHTML = `
+          <div class="card-inner">
+            <div class="card-face card-back"></div>
+            <div class="card-face card-front">
+              <span class="card-name">${cardData.name}</span>
+              <span class="card-orient">${reversed ? '逆位' : '正位'}</span>
+              <span class="card-number">${cardData.nameEn}</span>
+            </div>
+          </div>
+        `;
+        wrapper.addEventListener('click', () => wrapper.classList.toggle('flipped'));
+        slotInner.appendChild(wrapper);
+
+        if (drawnCards.length === cardsToDraw) {
+          readBtn.disabled = false;
+        }
+      }, { once: true });
+    }
+
+    function renderResult() {
+      resultArea.classList.add('visible');
+      const card = drawnCards[0];
+      if (currentSpread === 1) {
+        resultTitle.textContent = '牌意解读 · ' + card.name + (card.reversed ? ' · 逆位' : '');
+        resultContent.innerHTML = `<p>${card.reversed ? card.meaningReversed : card.meaning}</p>`;
+      } else {
+        resultTitle.textContent = '牌阵解读';
+        const labels = SPREAD_LABELS[currentSpread] || [];
+        resultContent.innerHTML = drawnCards.map((c, i) => {
+          const orient = c.reversed ? '逆位' : '正位';
+          const text = c.reversed ? (c.meaningReversed || c.meaning) : c.meaning;
+          return `<p><strong>${labels[i] || ('位置' + (i + 1))}：${c.name}（${orient}）</strong><br>${text}</p>`;
+        }).join('');
+      }
+    }
+  </script>
+</body>
+</html>
